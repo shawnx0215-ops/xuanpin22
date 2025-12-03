@@ -4,36 +4,61 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>电商选品清单工作台</title>
-    <!-- 引入 Tailwind CSS -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 引入 Babel 用于解析 React -->
+    <!-- React & ReactDOM (UMD) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel (用于解析 JSX) -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
     <style>
-        /* 自定义滚动条样式 */
         .scrollbar-thin::-webkit-scrollbar { width: 6px; }
         .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
         .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
-        .dark .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #475569; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
     <div id="root"></div>
 
-    <!-- React 应用逻辑 -->
-    <script type="text/babel" data-type="module">
-        import React, { useState, useEffect, useRef } from 'https://esm.sh/react@18.2.0';
-        import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
-        import { 
-            Trash2, Plus, ExternalLink, Image as ImageIcon, 
-            Copy, Move, Link as LinkIcon,
-            Edit2, Save, X, RotateCcw, Settings, Calculator,
-            Calendar, Layers, Package, Coins, ChevronUp, ChevronDown,
-            TrendingUp, Download, Upload, FileSpreadsheet, List, AlertCircle, CheckCircle
-        } from 'https://esm.sh/lucide-react@0.292.0';
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- 内置图标库 (解决本地跨域问题) ---
+        const Icons = {
+            Trash2: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>,
+            Plus: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>,
+            ExternalLink: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>,
+            Image: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>,
+            Copy: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>,
+            Move: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="19 9 22 12 19 15"/><polyline points="9 19 12 22 15 19"/><line x1="2" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="22"/></svg>,
+            Link: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>,
+            Edit2: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>,
+            Save: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>,
+            X: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>,
+            RotateCcw: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>,
+            Settings: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>,
+            Calculator: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>,
+            Calendar: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>,
+            Layers: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12.83 2.44 9.8 5.5a.5.5 0 0 1 .1.83l-9.8 6.5a.5.5 0 0 1-.66 0l-9.8-6.5a.5.5 0 0 1 .1-.83l9.8-5.5a.5.5 0 0 1 .46 0Z"/><path d="M22 10v6"/><path d="M2 10v6"/><path d="M12 22V12"/><path d="m22 10-9.8 6.5a.5.5 0 0 1-.4 0L2 10"/></svg>,
+            Package: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m16.5 9.4-9-5.19"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" x2="12" y1="22.08" y2="12"/></svg>,
+            Coins: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg>,
+            ChevronUp: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>,
+            ChevronDown: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>,
+            TrendingUp: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
+            Download: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>,
+            Upload: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>,
+            FileSpreadsheet: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M8 13h2"/><path d="M14 13h2"/><path d="M8 17h2"/><path d="M14 17h2"/></svg>,
+            List: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>,
+            AlertCircle: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>,
+            CheckCircle: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        };
 
         // --- 组件: 带有二次确认功能的按钮 ---
-        const ConfirmButton = ({ onConfirm, icon: Icon, title, className, confirmColor = "bg-red-500", size = 16, label = null }) => {
+        const ConfirmButton = ({ onConfirm, icon: IconName, title, className, confirmColor = "bg-red-500", size = 16, label = null }) => {
             const [step, setStep] = useState(0); 
+            const Icon = Icons[IconName.name] || IconName; // 兼容直接传组件或名字
 
             useEffect(() => {
                 if (step === 1) {
@@ -87,15 +112,15 @@
                     className="flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline truncate text-xs font-medium flex-1"
                     title={value}
                     >
-                    <LinkIcon size={12} />
+                    <Icons.Link size={12} />
                     <span className="truncate max-w-[120px]">{getDomain(value)}</span>
-                    <ExternalLink size={10} />
+                    <Icons.ExternalLink size={10} />
                     </a>
                     <button 
                     onClick={() => setIsEditing(true)} 
                     className="text-gray-400 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
                     >
-                    <Edit2 size={12} />
+                    <Icons.Edit2 size={12} />
                     </button>
                 </div>
                 );
@@ -118,7 +143,7 @@
                     onMouseDown={() => setIsEditing(false)} 
                     className="absolute right-2 text-green-600 hover:text-green-700"
                     >
-                    <Save size={14} />
+                    <Icons.Save size={14} />
                     </button>
                 )}
                 </div>
@@ -170,12 +195,12 @@
                         onClick={(e) => { e.stopPropagation(); onClear(); }}
                         className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
                     >
-                        <Trash2 size={12} />
+                        <Icons.Trash2 size={12} />
                     </button>
                     </>
                 ) : (
                     <div className="text-center text-gray-400 pointer-events-none p-1 flex flex-col items-center justify-center h-full">
-                    <ImageIcon size={28} className={`mx-auto mb-2 ${isActive ? 'text-blue-500' : 'text-gray-400'}`} />
+                    <Icons.Image size={28} className={`mx-auto mb-2 ${isActive ? 'text-blue-500' : 'text-gray-400'}`} />
                     <span className="text-[10px] font-medium tracking-wide block">{isActive ? "按 Ctrl+V 粘贴" : "点击此处激活"}</span>
                     </div>
                 )}
@@ -263,7 +288,7 @@
                     <span className="font-bold text-gray-800 text-sm">{totalQty}</span>
                     </div>
                     <div className="flex justify-between items-center text-xs bg-yellow-50 p-1.5 rounded border border-yellow-200">
-                    <span className="text-yellow-700 font-bold flex items-center gap-1"><Coins size={10}/> 资金:</span>
+                    <span className="text-yellow-700 font-bold flex items-center gap-1"><Icons.Coins size={10}/> 资金:</span>
                     <span className="font-mono font-bold text-yellow-600">¥{totalAmount.toLocaleString()}</span>
                     </div>
                 </div>
@@ -361,7 +386,7 @@
                         />
                         </div>
                         <button onClick={() => removeItem(idx)} className="text-gray-400 hover:text-red-500 px-1 transition-colors">
-                        <X size={14} />
+                        <Icons.X size={14} />
                         </button>
                     </div>
                     ))}
@@ -370,7 +395,7 @@
                     onClick={addItem}
                     className="mt-3 w-full py-1.5 text-[10px] border border-dashed border-gray-300 rounded text-gray-400 hover:text-blue-500 hover:border-blue-400 hover:bg-blue-50 flex justify-center items-center gap-1 transition-all"
                 >
-                    <Plus size={12} /> 添加{typeName}
+                    <Icons.Plus size={12} /> 添加{typeName}
                 </button>
                 </div>
             );
@@ -428,12 +453,12 @@
                     {/* 弹窗头部 */}
                     <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50">
                     <h2 className="text-xl font-bold text-gray-800 flex items-center gap-3">
-                        {isComplete ? <CheckCircle className="text-green-600" size={24} /> : <List className="text-blue-600" size={24} />}
+                        {isComplete ? <Icons.CheckCircle className="text-green-600" size={24} /> : <Icons.List className="text-blue-600" size={24} />}
                         <span>关键词与标题优化</span>
                         {isComplete && <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full border border-green-200 animate-in fade-in zoom-in">已完成</span>}
                     </h2>
                     <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full text-gray-500 hover:text-gray-800 transition-colors">
-                        <X size={24} />
+                        <Icons.X size={24} />
                     </button>
                     </div>
 
@@ -482,7 +507,7 @@
                         </h3>
                         {hasDuplicates && (
                             <div className="text-red-600 text-xs font-bold flex items-center gap-1.5 bg-red-50 px-3 py-1.5 rounded animate-pulse border border-red-100">
-                            <AlertCircle size={14} />
+                            <Icons.AlertCircle size={14} />
                             发现重复关键词！
                             </div>
                         )}
@@ -522,7 +547,7 @@
                             onClick={handleCopyIntegrated}
                             className="flex items-center gap-1 text-xs px-2 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50 text-gray-600 transition-colors"
                             >
-                            <Copy size={12} /> 复制全部
+                            <Icons.Copy size={12} /> 复制全部
                             </button>
                         </div>
                         <div className="p-3 bg-white border border-gray-300 rounded-lg text-sm text-gray-600 min-h-[60px] break-words font-mono">
@@ -536,7 +561,7 @@
                     <div className="p-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
                     <ConfirmButton 
                         onConfirm={handleReset} 
-                        icon={RotateCcw} 
+                        icon={Icons.RotateCcw} 
                         label="重置内容" 
                         className="flex items-center gap-2 px-4 py-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors font-medium text-sm"
                         title="清空标题和所有关键词"
@@ -696,4 +721,464 @@
             };
 
             const handleExportExcel = () => {
-                const
+                const maxSourcing = Math.max(1, ...products.map(p => p.sourcing.length));
+                const maxReference = Math.max(1, ...products.map(p => p.reference.length));
+                const maxCompetitor = Math.max(1, ...products.map(p => p.competitors.length));
+
+                let html = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                    td { vertical-align: middle; text-align: center; }
+                    .header-1 { background-color: #f3f4f6; font-weight: bold; font-size: 14px; }
+                    .header-2 { background-color: #e5e7eb; font-weight: bold; font-size: 12px; }
+                    .text-left { text-align: left; }
+                    </style>
+                </head>
+                <body>
+                    <table border="1">
+                    <thead>
+                        <tr class="header-1">
+                        <th rowspan="2">编号</th>
+                        <th colspan="2">基本信息</th>
+                        <th colspan="4">对标产品</th>
+                        <th colspan="4">利润计算</th>
+                        <th colspan="3">库存/资金</th>
+                        <th colspan="${maxSourcing}">下单货源链接</th>
+                        <th colspan="${maxReference}">作图参考链接</th>
+                        <th colspan="${maxCompetitor}">同行竞争链接</th>
+                        </tr>
+                        <tr class="header-2">
+                        <th>产品名</th><th>关键词列表</th>
+                        <th>图</th><th>链接</th><th>销量</th><th>评论数</th>
+                        <th>进货RMB</th><th>出售KRW</th><th>利润</th><th>利润率</th>
+                        <th>规格详情</th><th>总进货数</th><th>需要总资金</th>
+                        ${Array.from({length: maxSourcing}).map((_, i) => `<th>链接 ${i+1}</th>`).join('')}
+                        ${Array.from({length: maxReference}).map((_, i) => `<th>链接 ${i+1}</th>`).join('')}
+                        ${Array.from({length: maxCompetitor}).map((_, i) => `<th>链接 ${i+1}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+                `;
+
+                products.forEach((p, index) => {
+                const qty = p.skus.reduce((sum, sku) => sum + (parseInt(sku.quantity) || 0), 0);
+                const unitCost = parseFloat(p.calculator.costRMB) || 0;
+                const totalCost = qty * unitCost;
+                const profit = calculateProfit(p.calculator) || 0;
+                const margin = calculateProfitMargin(p.calculator);
+                
+                const keywordsStr = (p.keywords || []).filter(k => k).join(",");
+                const skuText = p.skus.filter(s => s.name || s.quantity).map(s => `${s.name || '无规格'}:${s.quantity || 0}`).join(";\n"); 
+                const imgCell = p.benchmark.image ? `<img src="${p.benchmark.image}" width="100" height="100" style="object-fit:contain"/>` : '';
+
+                html += `
+                    <tr>
+                    <td>${index + 1}</td>
+                    <td class="text-left">${p.name || ''}</td>
+                    <td class="text-left">${keywordsStr}</td>
+                    <td height="100" width="100">${imgCell}</td>
+                    <td class="text-left">${p.benchmark.link || ''}</td>
+                    <td>${p.benchmark.sales || ''}</td>
+                    <td>${p.benchmark.reviews || ''}</td>
+                    <td>${unitCost}</td>
+                    <td>${p.calculator.priceKWR || 0}</td>
+                    <td>${profit}</td>
+                    <td>${margin}%</td>
+                    <td class="text-left" style="white-space: pre-wrap;">${skuText}</td>
+                    <td>${qty}</td>
+                    <td>${totalCost}</td>
+                    ${Array.from({length: maxSourcing}).map((_, i) => `<td class="text-left">${p.sourcing[i]?.link || ''}</td>`).join('')}
+                    ${Array.from({length: maxReference}).map((_, i) => `<td class="text-left">${p.reference[i]?.link || ''}</td>`).join('')}
+                    ${Array.from({length: maxCompetitor}).map((_, i) => `<td class="text-left">${p.competitors[i]?.link || ''}</td>`).join('')}
+                    </tr>
+                `;
+                });
+
+                html += `</tbody></table></body></html>`;
+
+                const blob = new Blob([html], { type: "application/vnd.ms-excel" });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = `选品表_${getTodayDate().replace('/', '-')}.xls`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            };
+
+            const activeProduct = products.find(p => p.id === openKeywordModalId);
+
+            return (
+                <div className="min-h-screen bg-gray-100 p-4 font-sans text-gray-800">
+                
+                {/* 关键词整理弹窗 */}
+                {activeProduct && (
+                    <KeywordModal 
+                    product={activeProduct}
+                    onClose={() => setOpenKeywordModalId(null)}
+                    onUpdate={(field, val) => updateProductField(activeProduct.id, field, val)}
+                    />
+                )}
+
+                {/* 隐藏的文件输入框 */}
+                <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handleFileChange} 
+                    className="hidden" 
+                    accept=".json"
+                />
+
+                {/* 顶部统计仪表盘 */}
+                <div className="max-w-[1600px] mx-auto mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-200 flex flex-col justify-center">
+                    <div className="text-xs text-gray-400 font-medium mb-1 flex items-center gap-1">
+                        <Icons.Package size={12}/> 当前选品
+                    </div>
+                    <div className="text-xl font-bold text-gray-800">
+                        {products.length} <span className="text-xs font-normal text-gray-400">个</span>
+                    </div>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-200 flex flex-col justify-center relative overflow-hidden">
+                    <div className="relative z-10">
+                        <div className="text-xs text-gray-400 font-medium mb-1 flex items-center gap-1">
+                        <Icons.Layers size={12}/> 总进货件数
+                        </div>
+                        <div className="text-xl font-bold text-blue-600">
+                        {globalStats.totalQty} <span className="text-xs font-normal text-gray-400">件</span>
+                        </div>
+                    </div>
+                    <Icons.Layers className="absolute right-[-10px] bottom-[-10px] text-blue-50 opacity-50" size={60} />
+                    </div>
+
+                    <div className="col-span-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white p-3 rounded-xl shadow-sm flex flex-col justify-center relative overflow-hidden">
+                    <div className="relative z-10 flex justify-between items-center">
+                        <div>
+                            <div className="text-yellow-100 text-xs font-medium mb-1 flex items-center gap-1">
+                            <Icons.Coins size={12}/> 采购总资金预估
+                            </div>
+                            <div className="text-2xl font-bold">
+                            ¥ {globalStats.totalFund.toLocaleString()}
+                            </div>
+                        </div>
+                        <div className="bg-white/20 p-2 rounded-full">
+                        <Icons.TrendingUp size={24} className="text-white"/>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+
+                {/* 控制栏 */}
+                <div className="max-w-[1600px] mx-auto mb-4 flex flex-col gap-4">
+                    <div className="flex flex-wrap gap-2 justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-gray-200">
+                    <div>
+                        <h1 className="text-lg font-bold flex items-center gap-2">
+                        <Icons.Move className="text-blue-600" size={18}/>
+                        电商选品清单
+                        </h1>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        <button 
+                        onClick={() => setShowGlobalSettings(!showGlobalSettings)}
+                        className={`px-3 py-1.5 text-xs border rounded flex items-center gap-1 transition-colors ${showGlobalSettings ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+                        >
+                        <Icons.Settings size={12}/> {showGlobalSettings ? '收起设置' : '全局设置'}
+                        </button>
+
+                        <div className="flex bg-gray-50 rounded border border-gray-200 p-0.5">
+                        <button onClick={handleExportJSON} className="px-2 py-1 text-xs text-gray-600 hover:text-blue-600 hover:bg-white rounded flex items-center gap-1" title="保存所有数据(包括图片)到本地文件">
+                            <Icons.Download size={12}/> 备份
+                        </button>
+                        <div className="w-px bg-gray-300 my-0.5"></div>
+                        <ConfirmButton 
+                            onConfirm={handleImportClick}
+                            icon={Icons.Upload}
+                            label="恢复"
+                            className="px-2 py-1 text-xs text-gray-600 hover:text-blue-600 hover:bg-white rounded flex items-center gap-1"
+                            title="从本地文件恢复数据"
+                            confirmColor="bg-blue-600"
+                        />
+                        </div>
+
+                        <button onClick={handleExportExcel} className="px-3 py-1.5 text-xs bg-green-50 text-green-700 border border-green-200 rounded hover:bg-green-100 flex items-center gap-1">
+                        <Icons.FileSpreadsheet size={12}/> 导出Excel
+                        </button>
+
+                        <div className="w-px bg-gray-200 mx-1"></div>
+
+                        <ConfirmButton 
+                            onConfirm={() => setProducts([createNewProduct()])} 
+                            icon={Icons.Trash2} 
+                            label="清空"
+                            className="px-3 py-1.5 text-xs text-red-500 border border-red-100 rounded hover:bg-red-50 flex items-center gap-1"
+                        />
+                        <button onClick={addProduct} className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-1 shadow">
+                        <Icons.Plus size={14}/> 新建
+                        </button>
+                    </div>
+                    </div>
+
+                    {/* 全局设置栏 (可显示/隐藏) */}
+                    {showGlobalSettings && (
+                    <div className="bg-blue-900 text-white p-3 rounded-xl shadow-sm flex flex-wrap items-center gap-4 md:gap-8 text-sm animate-in slide-in-from-top-2 duration-200">
+                        <div className="flex items-center gap-2 font-bold text-blue-200">
+                        <Icons.Settings size={16} />
+                        全局参数：
+                        </div>
+                        <div className="flex items-center gap-2">
+                        <label className="text-blue-200 text-xs">汇率(x)</label>
+                        <input 
+                            type="number" 
+                            value={globalSettings.exchangeRate}
+                            onChange={(e) => setGlobalSettings(prev => ({...prev, exchangeRate: e.target.value}))}
+                            className="w-16 px-2 py-1 text-gray-900 rounded border-none outline-none focus:ring-2 focus:ring-blue-400"
+                        />
+                        </div>
+                        <div className="flex items-center gap-2">
+                        <label className="text-blue-200 text-xs">Coupang运费</label>
+                        <input 
+                            type="number" 
+                            value={globalSettings.coupangShipping}
+                            onChange={(e) => setGlobalSettings(prev => ({...prev, coupangShipping: e.target.value}))}
+                            className="w-20 px-2 py-1 text-gray-900 rounded border-none outline-none focus:ring-2 focus:ring-blue-400"
+                        />
+                        </div>
+                        <div className="flex items-center gap-2">
+                        <label className="text-blue-200 text-xs">海运费</label>
+                        <input 
+                            type="number" 
+                            value={globalSettings.seaShipping}
+                            onChange={(e) => setGlobalSettings(prev => ({...prev, seaShipping: e.target.value}))}
+                            className="w-20 px-2 py-1 text-gray-900 rounded border-none outline-none focus:ring-2 focus:ring-blue-400"
+                        />
+                        </div>
+                    </div>
+                    )}
+                </div>
+
+                {/* 产品列表 */}
+                <div className="max-w-[1600px] mx-auto space-y-6">
+                    {products.map((product, pIndex) => {
+                    const isKeywordsComplete = product.name?.trim() && (product.keywords || []).length === 20 && (product.keywords || []).every(k => k && k.trim());
+                    
+                    return (
+                    <div key={product.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative group">
+                        
+                        <div className="bg-gray-50 px-4 py-2 border-b border-gray-100 flex flex-wrap gap-2 justify-between items-center">
+                        <div className="flex flex-wrap items-center gap-3">
+                            <span className="bg-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                            #{products.length - pIndex}
+                            </span>
+                            
+                            <div className="flex items-center gap-1 text-gray-500 bg-gray-100 px-2 py-0.5 rounded text-xs border border-gray-200" title="创建日期">
+                            <Icons.Calendar size={12} />
+                            <span>{product.date}</span>
+                            </div>
+
+                            <input 
+                            type="text" 
+                            value={product.name}
+                            onChange={(e) => updateProductField(product.id, 'name', e.target.value)}
+                            className="bg-transparent font-bold text-gray-700 outline-none focus:border-b-2 border-blue-500 min-w-[150px] md:w-64 text-sm md:text-base placeholder-gray-400"
+                            placeholder="在此输入产品名称..."
+                            />
+
+                            <button 
+                            onClick={() => setOpenKeywordModalId(product.id)}
+                            className={`flex items-center gap-1 text-xs px-2 py-1 rounded border transition-colors ml-2 ${
+                                isKeywordsComplete 
+                                ? 'bg-green-50 text-green-600 border-green-200 hover:bg-green-100' 
+                                : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border-indigo-200'
+                            }`}
+                            title={isKeywordsComplete ? "已完成: 产品名和20个关键词" : "未完成: 请填写产品名和所有关键词"}
+                            >
+                            {isKeywordsComplete ? <Icons.CheckCircle size={12} /> : <Icons.List size={12} />}
+                            {isKeywordsComplete ? "已完善" : "关键词"}
+                            </button>
+                        </div>
+                        
+                        <ConfirmButton 
+                            onConfirm={() => removeProduct(product.id)}
+                            icon={Icons.Trash2}
+                            title="删除该产品整行"
+                            className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-all"
+                        />
+                        </div>
+
+                        <div className="flex divide-x divide-gray-100 overflow-x-auto">
+                        
+                        {/* 1. 对标 */}
+                        <div className="min-w-[240px] w-[15%] p-3 flex-shrink-0 flex flex-col gap-2 relative">
+                            <div className="flex justify-between items-center mb-1">
+                            <div className="text-xs font-bold text-blue-600 flex items-center gap-1">1. 对标产品</div>
+                            <ConfirmButton 
+                                onConfirm={() => resetSection(product.id, 'benchmark')} 
+                                icon={Icons.RotateCcw} 
+                                className="text-gray-300 hover:text-blue-500" 
+                                title="清空对标" 
+                                size={12} 
+                                confirmColor="bg-blue-500"
+                            />
+                            </div>
+                            <div className="flex-1 flex flex-col gap-2">
+                            <PasteZone 
+                                image={product.benchmark.image} 
+                                onImagePaste={(img) => updateProduct(product.id, 'benchmark', 'image', img)}
+                                onClear={() => updateProduct(product.id, 'benchmark', 'image', null)}
+                            />
+                            <SmartLinkInput 
+                                value={product.benchmark.link} 
+                                onChange={(v) => updateProduct(product.id, 'benchmark', 'link', v)} 
+                                placeholder="对标链接" 
+                            />
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                <label className="block text-[10px] text-gray-400 mb-0.5">总销量</label>
+                                <input 
+                                    className="w-full text-xs border rounded p-1 outline-none focus:border-blue-400" 
+                                    value={product.benchmark.sales} 
+                                    onChange={(e) => updateProduct(product.id, 'benchmark', 'sales', e.target.value)}
+                                />
+                                </div>
+                                <div>
+                                <label className="block text-[10px] text-gray-400 mb-0.5">评论数</label>
+                                <input 
+                                    className="w-full text-xs border rounded p-1 outline-none focus:border-blue-400" 
+                                    value={product.benchmark.reviews} 
+                                    onChange={(e) => updateProduct(product.id, 'benchmark', 'reviews', e.target.value)}
+                                />
+                                </div>
+                            </div>
+                            </div>
+                        </div>
+
+                        {/* 2. 利润计算 */}
+                        <div className="min-w-[200px] w-[15%] p-3 flex-shrink-0 bg-blue-50/10">
+                            <div className="flex justify-between items-center mb-2">
+                            <div className="text-xs font-bold text-red-500 flex items-center gap-1"><Icons.Calculator size={12}/> 2. 利润测算</div>
+                            <ConfirmButton 
+                                onConfirm={() => resetSection(product.id, 'calculator')} 
+                                icon={Icons.RotateCcw} 
+                                className="text-gray-300 hover:text-red-500" 
+                                title="清空计算" 
+                                size={12} 
+                                confirmColor="bg-red-500"
+                            />
+                            </div>
+                            <MinimalCalculator 
+                            data={product.calculator}
+                            updateData={(k, v) => updateProduct(product.id, 'calculator', k, v)}
+                            globalSettings={globalSettings}
+                            />
+                        </div>
+
+                        {/* 3. SKU/库存 */}
+                        <div className="min-w-[200px] w-[15%] p-3 flex-shrink-0 bg-indigo-50/10">
+                            <div className="flex justify-between items-center mb-2">
+                            <div className="text-xs font-bold text-indigo-600 flex items-center gap-1">
+                                <Icons.Layers size={12}/> 3. SKU/库存
+                            </div>
+                            <ConfirmButton 
+                                onConfirm={() => resetSection(product.id, 'skus')} 
+                                icon={Icons.RotateCcw} 
+                                className="text-gray-300 hover:text-indigo-500" 
+                                title="清空SKU" 
+                                size={12} 
+                                confirmColor="bg-indigo-500"
+                            />
+                            </div>
+                            <SkuModule 
+                            skus={product.skus}
+                            updateSkus={(newSkus) => updateProduct(product.id, 'skus', newSkus)}
+                            unitCostRMB={product.calculator.costRMB}
+                            />
+                        </div>
+
+                        {/* 4. 下单 */}
+                        <div className="min-w-[200px] flex-1 p-3 flex-shrink-0">
+                            <div className="flex justify-between items-center mb-2">
+                            <div className="text-xs font-bold text-green-600">4. 下单货源</div>
+                            <ConfirmButton 
+                                onConfirm={() => resetSection(product.id, 'sourcing')} 
+                                icon={Icons.RotateCcw} 
+                                className="text-gray-300 hover:text-green-500" 
+                                title="清空货源" 
+                                size={12} 
+                                confirmColor="bg-green-500"
+                            />
+                            </div>
+                            <SimpleListModule 
+                            typeName="货源"
+                            items={product.sourcing}
+                            updateItems={(newItems) => updateProduct(product.id, 'sourcing', newItems, null)}
+                            />
+                        </div>
+
+                        {/* 5. 参考 */}
+                        <div className="min-w-[200px] flex-1 p-3 flex-shrink-0">
+                            <div className="flex justify-between items-center mb-2">
+                            <div className="text-xs font-bold text-purple-600">5. 作图参考</div>
+                            <ConfirmButton 
+                                onConfirm={() => resetSection(product.id, 'reference')} 
+                                icon={Icons.RotateCcw} 
+                                className="text-gray-300 hover:text-purple-500" 
+                                title="清空参考" 
+                                size={12} 
+                                confirmColor="bg-purple-500"
+                            />
+                            </div>
+                            <SimpleListModule 
+                            typeName="参考"
+                            items={product.reference}
+                            updateItems={(newItems) => updateProduct(product.id, 'reference', newItems, null)}
+                            />
+                        </div>
+
+                        {/* 6. 同行 */}
+                        <div className="min-w-[200px] flex-1 p-3 flex-shrink-0 bg-orange-50/10">
+                            <div className="flex justify-between items-center mb-2">
+                            <div className="text-xs font-bold text-orange-600">6. 同行竞品</div>
+                            <ConfirmButton 
+                                onConfirm={() => resetSection(product.id, 'competitors')} 
+                                icon={Icons.RotateCcw} 
+                                className="text-gray-300 hover:text-orange-500" 
+                                title="清空竞品" 
+                                size={12} 
+                                confirmColor="bg-orange-500"
+                            />
+                            </div>
+                            <SimpleListModule 
+                            typeName="竞品"
+                            items={product.competitors}
+                            updateItems={(newItems) => updateProduct(product.id, 'competitors', newItems, null)}
+                            />
+                        </div>
+
+                        </div>
+                    </div>
+                    )})}
+                    
+                    {/* 底部添加按钮 */}
+                    <div className="h-12 flex justify-center">
+                    <button onClick={addProduct} className="text-gray-400 hover:text-blue-500 flex flex-col items-center gap-1 transition-colors group">
+                        <div className="bg-white p-2 rounded-full border-2 border-dashed border-gray-300 group-hover:border-blue-400 group-hover:bg-blue-50">
+                            <Icons.Plus size={20} />
+                        </div>
+                        <span className="text-xs font-medium">继续添加产品</span>
+                    </button>
+                    </div>
+                </div>
+                </div>
+            );
+        }
+
+        // 渲染根组件
+        const root = createRoot(document.getElementById('root'));
+        root.render(<MultiProductSelectionApp />);
+    </script>
+</body>
+</html>
